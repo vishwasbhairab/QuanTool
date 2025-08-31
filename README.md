@@ -1,45 +1,74 @@
-# **QuanTool Core: A Post-Training Quantization Toolkit**
+# 🚀 QuanTool Core: A Post-Training Quantization Toolkit
 
-## **1\. Project Description**
+## 📌 1. Project Description
+QuanTool is a **Python-based benchmarking framework** for evaluating the performance impact of **post-training quantization** on Hugging Face Transformer models.
 
-QuanTool is a Python-based framework for benchmarking and evaluating the performance impact of post-training quantization on Hugging Face Transformer models. It provides a clean, automated pipeline to compare a model's original full-precision (Float32) version against its 8-bit integer (INT8) counterparts.
+It provides a clean, automated pipeline to compare a model's **original full-precision (Float32)** version against its **8-bit integer (INT8)** counterparts.
 
-The primary goal of this toolkit is to provide a clear, data-driven analysis of the trade-offs between model accuracy, inference speed (latency), memory usage, and model size, enabling developers to make informed decisions about deploying optimized models.
+The goal is to deliver **data-driven insights** into the trade-offs between:
 
-## **2\. Installation**
+- ✅ Model accuracy  
+- ⚡ Inference speed (latency)  
+- 💾 Memory usage  
+- 📦 Model size  
 
-Ensure you have Python 3.8+ and pip installed.
+This enables developers to make **informed deployment decisions** for optimized models.
 
-1. **Clone the repository or download the source files.**  
-2. **Install the required dependencies:**  
-   pip install \-r requiremnts.txt
+---
 
-## **3\. How to Run the Benchmark**
+## ⚙️ 2. Installation
+Ensure you have **Python 3.8+** and `pip` installed.
 
-The main script run\_benchmark.py orchestrates the entire process. You can specify which model to test using the \--model-name argument.
+1. Clone the repository or download the source files.  
+2. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-\# Example: Run the benchmark on "distilbert-base-uncased"  
-python run\_benchmark.py \--model-name "distilbert-base-uncased"
+---
 
-\# Example: Run the benchmark on "bert-base-uncased"  
-python run\_benchmark.py \--model-name "bert-base-uncased"
+## ▶️ 3. Running the Benchmark
+The main entry point is **`run_benchmark.py`**.  
+You can specify the model and **GLUE task** using command-line arguments.
 
+### Example Commands:
+```bash
+# Run on DistilBERT with the default task (sst2)
+python run_benchmark.py --model-name "distilbert-base-uncased"
+
+# Run on BERT with the default task (sst2)
+python run_benchmark.py --model-name "bert-base-uncased"
+
+# Run on DistilBERT with a different task (qnli)
+python run_benchmark.py --model-name "distilbert-base-uncased" --task "qnli"
+```
+
+---
+
+## 🔄 4. What Happens When You Run It?
 The script will:
 
-1. Download the specified model and the glue/sst2 dataset.  
-2. Benchmark the original FP32 model.  
-3. Apply and benchmark INT8 Dynamic Quantization.  
-4. Attempt to apply and benchmark INT8 Static Quantization (and handle failures gracefully).  
-5. Print a summary table to the console.  
-6. Save the results to a .csv file and a summary plot to a .png file.
+1. 📥 Download the specified model and **GLUE task dataset** (e.g., `sst2`, `qnli`).  
+2. 🧪 Benchmark the **original FP32 model**.  
+3. ⚡ Apply and benchmark **INT8 Dynamic Quantization**.  
+4. 🛠️ Attempt **INT8 Static Quantization** (and gracefully handle failures).  
+5. 📊 Print a **summary table** in the console.  
+6. 💾 Save results to:  
+   - `.csv` file  
+   - `.png` summary plot  
 
-## **4\. Example Output**
+---
 
-After a successful run, you will see a summary table in your terminal like the one below. This example shows the results for distilbert-base-uncased, where static quantization failed as expected.
+## 📈 5. Example Output
+After a successful run, you will see a table like this in your terminal.  
+This example is for `distilbert-base-uncased` on the **sst2** task.  
 
-*(Note: Your numbers may vary slightly based on your hardware.)*
+*(Note: Numbers may vary depending on your hardware.)*
 
-\--- Final Benchmark Results \---  
-              accuracy  Accuracy Drop  avg\_latency\_ms  Latency Speedup (x)  peak\_memory\_mb  Memory Reduction (x)  model\_size\_mb  Size Reduction (x)  
-Float32         0.8933         0.0000       2753.4512               1.0000        834.1134                1.0000       256.3398              1.0000  
-INT8-Dynamic    0.8853         0.0080       1305.1221               2.1100        835.4321                0.9984        66.7219              3.8418  
+| Model        | Accuracy | Accuracy Drop | Avg Latency (ms) | Latency Speedup (x) |
+|--------------|----------|---------------|------------------|----------------------|
+| Float32      | 0.8933   | 0.0000        | 2753.45          | 1.00                 |
+| INT8-Dynamic | 0.8853   | 0.0080        | 1305.12          | 2.11                 |
+
+> ✅ Dynamic quantization achieves a **2.1x latency speedup** and **3.8x model size reduction** with only a **0.8% accuracy drop**.  
+> 

@@ -12,7 +12,9 @@ def main(args):
     
     # --- Configuration ---
     MODEL_NAME = args.model_name
-    DATASET_INFO = {'name': 'glue', 'subset': 'sst2'}
+    TASK_NAME = args.task
+    DATASET_INFO = {'name': 'glue', 'subset': TASK_NAME}
+    # For both sst2 and qnli, the number of labels is 2
     NUM_LABELS = 2
     
     all_results = []
@@ -32,7 +34,7 @@ def main(args):
     )
 
     # --- Baseline Evaluation (Float32) ---
-    print(f"\n--- Evaluating Float32 Model ({MODEL_NAME}) ---")
+    print(f"\n--- Evaluating Float32 Model ({MODEL_NAME} on {TASK_NAME}) ---")
     fp32_results = evaluator.run_evaluation_pipeline(fp32_model, tokenizer, DATASET_INFO)
     all_results.append(fp32_results)
     index_labels.append('Float32')
@@ -85,15 +87,16 @@ def main(args):
 
     # --- Save Results to Files ---
     safe_model_name = MODEL_NAME.replace('/', '_')
+    safe_task_name = TASK_NAME.replace('/', '_')
     
     # Save table to CSV
-    csv_filename = f"benchmark_results_{safe_model_name}.csv"
+    csv_filename = f"benchmark_results_{safe_model_name}_{safe_task_name}.csv"
     results_df.to_csv(csv_filename)
     print(f"\nResults saved to {csv_filename}")
     
     # Save plot
     fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-    fig.suptitle(f'Quantization Benchmark: {MODEL_NAME}', fontsize=16)
+    fig.suptitle(f'Quantization Benchmark: {MODEL_NAME} on {TASK_NAME}', fontsize=16)
 
     # Use a color list that can be sliced based on the number of results
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
@@ -113,7 +116,7 @@ def main(args):
     axes[2].tick_params(axis='x', rotation=0)
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
-    plot_filename = f"benchmark_plot_{safe_model_name}.png"
+    plot_filename = f"benchmark_plot_{safe_model_name}_{safe_task_name}.png"
     plt.savefig(plot_filename)
     print(f"Plot saved to {plot_filename}")
 
@@ -124,20 +127,30 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model-name', 
         type=str, 
-        default='bert-base-uncased', 
+        default='distilbert-base-uncased', 
         help='The name of the HuggingFace model to benchmark (e.g., "distilbert-base-uncased").'
+    )
+    parser.add_argument(
+        '--task',
+        type=str,
+        default='sst2',
+        help='The GLUE task to run the benchmark on (e.g., "sst2", "qnli").'
     )
     
     args = parser.parse_args()
     main(args)
+
+
 
 '''
 
 **To Run the Full Benchmark:**
 
 ```bash
-# Test DistilBERT (which is smaller and faster)
-python run_benchmark.py --model-name "your-model-name" 
-eg :  >python run_benchmark.py --model-name "distilbert-base-uncased"
+python run_benchmark.py --model-name "distilbert-base-uncased" --task "qnli"
+
+This will produce a new set of `.csv` and `.png` files with the task name included. 
+Once this is done, your benchmarking phase will be complete, 
+and you'll have all the data needed for your final report.
 
 '''
