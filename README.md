@@ -39,7 +39,8 @@ After a successful run, you will see a summary table in your terminal like the o
 
 *(Note: Your numbers may vary slightly based on your hardware.)*
 
-\--- Final Benchmark Results \---  
-              |accuracy | Accuracy Drop | avg\_latency\_ms | Latency Speedup (x) | peak\_memory\_mb | Memory Reduction (x) | model\_size\_mb | Size Reduction (x)  
-Float32       |  0.8933  |       0.0000  |     2753.4512   |           1.0000    |    834.1134      |          1.0000    |   256.3398        |      1.0000  
-INT8-Dynamic  |  0.8853    |     0.0080    |   1305.1221   |            2.1100    |    835.4321      |          0.9984   |     66.7219       |       3.8418  
+| Model        | Accuracy | Accuracy Drop | Avg Latency (ms) | Latency Speedup (x) | Peak Memory (MB) | Memory Reduction (x) | Model Size (MB) | Size Reduction (x) |
+|--------------|----------|---------------|------------------|----------------------|------------------|-----------------------|-----------------|---------------------|
+| Float32      | 0.8933   | 0.0000        | 2753.4512        | 1.0000               | 834.1134         | 1.0000                | 256.3398        | 1.0000              |
+| INT8-Dynamic | 0.8853   | 0.0080        | 1305.1221        | 2.1100               | 835.4321         | 0.9984                | 66.7219         | 3.8418              |
+
