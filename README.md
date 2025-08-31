@@ -22,12 +22,12 @@ Ensure you have **Python 3.8+** and `pip` installed.
 
 1. **Clone the repository or download the source files.**  
    ```bash
-   git clone https://github.com/your-username/quantool-core.git
-   cd quantool-core
+   git clone https://github.com/vishwasbhairab/QuantTool.git
+   cd QuanTool
    ```
 2. **Install the required dependencies:**  
    ```bash
-   pip install -r requirements.txt
+   pip install -r requiremnts.txt
    ```
 
 ---
