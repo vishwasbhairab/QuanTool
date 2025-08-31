@@ -1,46 +1,83 @@
-# **QuanTool Core: A Post-Training Quantization Toolkit**
+# 🚀 QuanTool Core: A Post-Training Quantization Toolkit
 
-## **1\. Project Description**
+## 📌 1. Project Description
 
-QuanTool is a Python-based framework for benchmarking and evaluating the performance impact of post-training quantization on Hugging Face Transformer models. It provides a clean, automated pipeline to compare a model's original full-precision (Float32) version against its 8-bit integer (INT8) counterparts.
+**QuanTool** is a **Python-based benchmarking framework** for evaluating the performance impact of **post-training quantization** on Hugging Face Transformer models.  
 
-The primary goal of this toolkit is to provide a clear, data-driven analysis of the trade-offs between model accuracy, inference speed (latency), memory usage, and model size, enabling developers to make informed decisions about deploying optimized models.
+It provides a clean, automated pipeline to compare a model's **original full-precision (Float32)** version against its **8-bit integer (INT8)** counterparts.  
 
-## **2\. Installation**
+The goal is to deliver **data-driven insights** into the trade-offs between:  
+- ✅ Model accuracy  
+- ⚡ Inference speed (latency)  
+- 💾 Memory usage  
+- 📦 Model size  
 
-Ensure you have Python 3.8+ and pip installed.
+This enables developers to make **informed deployment decisions** for optimized models.
+
+---
+
+## ⚙️ 2. Installation
+
+Ensure you have **Python 3.8+** and `pip` installed.  
 
 1. **Clone the repository or download the source files.**  
+   ```bash
+   git clone https://github.com/your-username/quantool-core.git
+   cd quantool-core
+   ```
 2. **Install the required dependencies:**  
-   pip install \-r requiremnts.txt
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## **3\. How to Run the Benchmark**
+---
 
-The main script run\_benchmark.py orchestrates the entire process. You can specify which model to test using the \--model-name argument.
+## ▶️ 3. Running the Benchmark
 
-\# Example: Run the benchmark on "distilbert-base-uncased"  
-python run\_benchmark.py \--model-name "distilbert-base-uncased"
+The main entry point is **`run_benchmark.py`**, which orchestrates the entire process.  
+You can specify which model to test using the `--model-name` argument.  
 
-\# Example: Run the benchmark on "bert-base-uncased"  
-python run\_benchmark.py \--model-name "bert-base-uncased"
+### Example commands:
+```bash
+# Run benchmark on DistilBERT
+python run_benchmark.py --model-name "distilbert-base-uncased"
 
-The script will:
+# Run benchmark on BERT
+python run_benchmark.py --model-name "bert-base-uncased"
+```
 
-1. Download the specified model and the glue/sst2 dataset.  
-2. Benchmark the original FP32 model.  
-3. Apply and benchmark INT8 Dynamic Quantization.  
-4. Attempt to apply and benchmark INT8 Static Quantization (and handle failures gracefully).  
-5. Print a summary table to the console.  
-6. Save the results to a .csv file and a summary plot to a .png file.
+---
 
-## **4\. Example Output**
+## 🔄 4. What Happens When You Run It?
 
-After a successful run, you will see a summary table in your terminal like the one below. This example shows the results for distilbert-base-uncased, where static quantization failed as expected.
+The script will:  
+1. 📥 Download the specified model and the **GLUE/SST-2 dataset**.  
+2. 🧪 Benchmark the **original FP32 model**.  
+3. ⚡ Apply and benchmark **INT8 Dynamic Quantization**.  
+4. 🛠️ Attempt **INT8 Static Quantization** (gracefully handle failures).  
+5. 📊 Print a **summary table** in the console.  
+6. 💾 Save results as:  
+   - `.csv` → benchmark results  
+   - `.png` → summary plot  
 
-*(Note: Your numbers may vary slightly based on your hardware.)*
+---
+
+## 📈 5. Example Output
+
+After a successful run, you will see a table like this in your terminal:  
+
+*(Note: Numbers may vary depending on your hardware.)*  
 
 | Model        | Accuracy | Accuracy Drop | Avg Latency (ms) | Latency Speedup (x) | Peak Memory (MB) | Memory Reduction (x) | Model Size (MB) | Size Reduction (x) |
 |--------------|----------|---------------|------------------|----------------------|------------------|-----------------------|-----------------|---------------------|
 | Float32      | 0.8933   | 0.0000        | 2753.4512        | 1.0000               | 834.1134         | 1.0000                | 256.3398        | 1.0000              |
 | INT8-Dynamic | 0.8853   | 0.0080        | 1305.1221        | 2.1100               | 835.4321         | 0.9984                | 66.7219         | 3.8418              |
 
+> ✅ Dynamic quantization achieves **2.1x latency speedup** and **3.8x model size reduction** with only a **0.8% accuracy drop**.  
+> ⚠️ Static quantization may fail for certain Transformer models (expected behavior).  
+
+---
+
+## 🙌 Acknowledgements
+- [Hugging Face Transformers](https://github.com/huggingface/transformers)  
+- [PyTorch Quantization](https://pytorch.org/docs/stable/quantization.html)  
