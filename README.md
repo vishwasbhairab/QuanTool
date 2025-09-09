@@ -73,7 +73,6 @@ This example is for `distilbert-base-uncased` on the **sst2** task.
 > ✅ Dynamic quantization achieves a **2.1x latency speedup** and **3.8x model size reduction** with only a **0.8% accuracy drop**.  
 > ⚠️ Static quantization is expected to fail for some Transformer models, which the tool handles automatically.  
 ---
-## Collaborators
 
 ## Collaborators
 
