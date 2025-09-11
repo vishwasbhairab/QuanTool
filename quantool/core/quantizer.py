@@ -35,11 +35,11 @@ def quantize_int8_static(model: torch.nn.Module, calibration_dataloader: DataLoa
         # --- THE FINAL FIX: SWITCHING THE ENGINE ---
         # 1. Force PyTorch to use the 'qnnpack' backend. This engine has wider
         #    compatibility across different CPU architectures, especially on Windows/macOS.
-        print("Setting quantization backend to 'fbgemm'...")
-        torch.backends.quantized.engine = 'fbgemm'
+        print("Setting quantization backend to 'qnnpack'...")
+        torch.backends.quantized.engine = 'qnnpack'
         
         # 2. Get the default quantization configuration that matches this backend.
-        qconfig = torch.ao.quantization.get_default_qconfig('fbgemm')
+        qconfig = torch.ao.quantization.get_default_qconfig('qnnpack')
 
         # 3. Manually iterate and assign the qconfig to Linear layers, while
         #    explicitly disabling it for Embedding layers. This is the most robust method.
