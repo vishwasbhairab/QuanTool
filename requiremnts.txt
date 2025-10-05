@@ -1,9 +1,0 @@
-torch>=1.13.0
-transformers
-datasets
-scikit-learn
-numpy
-tqdm
-pandas
-matplotlib
-seaborn
