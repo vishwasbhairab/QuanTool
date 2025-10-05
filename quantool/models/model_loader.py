@@ -2,24 +2,54 @@ import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from typing import Tuple
 
-def load_model_and_tokenizer(model_name: str, num_labels: int) -> Tuple[torch.nn.Module, AutoTokenizer]:
+# Mapping of tasks to fine-tuned models available on Hugging Face
+FINETUNED_MODELS = {
+    'sst2': {
+        'bert-base-uncased': 'textattack/bert-base-uncased-SST-2',
+        'distilbert-base-uncased': 'distilbert-base-uncased-finetuned-sst-2-english'
+    },
+    'qnli': {
+        'bert-base-uncased': 'textattack/bert-base-uncased-QNLI',
+        'distilbert-base-uncased': 'textattack/distilbert-base-uncased-QNLI'
+    },
+    'mrpc': {
+        'bert-base-uncased': 'textattack/bert-base-uncased-MRPC',
+        'distilbert-base-uncased': 'textattack/distilbert-base-uncased-MRPC'
+    },
+    'rte': {
+        'bert-base-uncased': 'textattack/bert-base-uncased-RTE',
+        'distilbert-base-uncased': 'textattack/distilbert-base-uncased-RTE'
+    }
+}
+
+def load_model_and_tokenizer(model_name: str, task: str) -> Tuple[torch.nn.Module, AutoTokenizer]:
     """
-    Loads a pre-trained transformer model and its tokenizer from HuggingFace Hub.
-
+    Loads a fine-tuned transformer model and tokenizer for a specific task.
+    
     Args:
-        model_name (str): The name of the model to load (e.g., 'bert-base-uncased').
-        num_labels (int): The number of labels for the classification head.
-
+        model_name (str): Base model architecture (e.g., 'bert-base-uncased')
+        task (str): GLUE task name (e.g., 'sst2', 'qnli')
+        
     Returns:
-        Tuple[torch.nn.Module, AutoTokenizer]: A tuple containing the model and the tokenizer.
+        Tuple[torch.nn.Module, AutoTokenizer]: Fine-tuned model and tokenizer
     """
     try:
-        print(f"Loading model: {model_name}...")
-        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        print("Model and tokenizer loaded successfully.")
+        # Get fine-tuned model name
+        if task in FINETUNED_MODELS and model_name in FINETUNED_MODELS[task]:
+            finetuned_model_name = FINETUNED_MODELS[task][model_name]
+            print(f"Loading fine-tuned model: {finetuned_model_name}")
+        else:
+            raise ValueError(
+                f"No fine-tuned model found for {model_name} on task {task}. "
+                f"Available combinations: {list(FINETUNED_MODELS.keys())}"
+            )
+        
+        model = AutoModelForSequenceClassification.from_pretrained(finetuned_model_name)
+        tokenizer = AutoTokenizer.from_pretrained(finetuned_model_name)
+        
+        print(f"Successfully loaded fine-tuned model for {task}")
         return model, tokenizer
+            
     except Exception as e:
-        print(f"Error loading model {model_name}: {e}")
+        print(f"Error loading model: {e}")
         raise
-

@@ -1,0 +1,18 @@
+\begin{table}
+\caption{Comprehensive quantization results across models and tasks.}
+\label{tab:comprehensive_results}
+\begin{tabular}{llrrrrr}
+\toprule
+Model & Task & FP32 Accuracy & INT8 Accuracy & Accuracy Δ (%) & Latency Speedup & Size Reduction \\
+\midrule
+bert-base-uncased & mrpc & 0.463 & 0.316 & -14.706 & 2.369 & 2.413 \\
+bert-base-uncased & qnli & 0.589 & 0.517 & -7.194 & 2.383 & 2.413 \\
+bert-base-uncased & rte & 0.563 & 0.491 & -7.220 & 2.209 & 2.413 \\
+bert-base-uncased & sst2 & 0.924 & 0.907 & -1.720 & 2.290 & 2.413 \\
+distilbert-base-uncased & mrpc & 0.858 & 0.806 & -5.147 & 2.293 & 1.931 \\
+distilbert-base-uncased & qnli & 0.885 & 0.860 & -2.471 & 2.332 & 1.931 \\
+distilbert-base-uncased & rte & 0.657 & 0.606 & -5.054 & 2.453 & 1.931 \\
+distilbert-base-uncased & sst2 & 0.911 & 0.897 & -1.376 & 2.326 & 1.931 \\
+\bottomrule
+\end{tabular}
+\end{table}

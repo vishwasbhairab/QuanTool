@@ -3,6 +3,7 @@ import time
 import os
 import tracemalloc
 import numpy as np
+from scipy import stats
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
@@ -138,3 +139,40 @@ def run_evaluation_pipeline(model: torch.nn.Module, tokenizer, dataset_info: Dic
         **performance_metrics
     }
 
+
+def run_multiple_evaluations(model: torch.nn.Module, tokenizer, dataset_info: Dict, n_runs: int = 3) -> Dict[str, Any]:
+    """
+    Run evaluation multiple times to get confidence intervals.
+
+    Args:
+        model: Model to evaluate
+        tokenizer: Tokenizer
+        dataset_info: Dataset configuration
+        n_runs: Number of evaluation runs
+
+    Returns:
+        Dictionary with mean, std, and confidence intervals
+    """
+    results = []
+
+    for run in range(n_runs):
+        print(f"\n--- Run {run + 1}/{n_runs} ---")
+        result = run_evaluation_pipeline(model, tokenizer, dataset_info)
+        results.append(result)
+
+    # Compute statistics
+    accuracies = [r['accuracy'] for r in results]
+    latencies = [r['avg_latency_ms'] for r in results]
+
+    return {
+        'accuracy_mean': np.mean(accuracies),
+        'accuracy_std': np.std(accuracies),
+        'accuracy_ci_95': stats.t.interval(0.95, len(accuracies)-1,
+                                            loc=np.mean(accuracies),
+                                            scale=stats.sem(accuracies)),
+        'latency_mean': np.mean(latencies),
+        'latency_std': np.std(latencies),
+        'avg_latency_ms': np.mean(latencies),  # for compatibility
+        'model_size_mb': results[0]['model_size_mb'],  # consistent across runs
+        'peak_memory_mb': results[0]['peak_memory_mb']
+    }

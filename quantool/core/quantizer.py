@@ -35,11 +35,11 @@ def quantize_int8_static(model: torch.nn.Module, calibration_dataloader: DataLoa
         # --- THE FINAL FIX: SWITCHING THE ENGINE ---
         # 1. Force PyTorch to use the 'qnnpack' backend. This engine has wider
         #    compatibility across different CPU architectures, especially on Windows/macOS.
-        print("Setting quantization backend to 'qnnpack'...")
-        torch.backends.quantized.engine = 'qnnpack'
+        print("Setting quantization backend to 'fbgemm'...")
+        torch.backends.quantized.engine = 'fbgemm'
         
         # 2. Get the default quantization configuration that matches this backend.
-        qconfig = torch.ao.quantization.get_default_qconfig('qnnpack')
+        qconfig = torch.ao.quantization.get_default_qconfig('fbgemm')
 
         # 3. Manually iterate and assign the qconfig to Linear layers, while
         #    explicitly disabling it for Embedding layers. This is the most robust method.
@@ -68,6 +68,74 @@ def quantize_int8_static(model: torch.nn.Module, calibration_dataloader: DataLoa
         
         print("INT8 static quantization successful.")
         return quantized_model
+    except Exception as e:
+        print(f"Error during INT8 static quantization: {e}")
+        raise
+
+def quantize_int8_static_v2(model: torch.nn.Module, calibration_dataloader: DataLoader) -> torch.nn.Module:
+    """
+    Alternative static quantization using manual qconfig assignment.
+    More robust for Transformer models.
+    """
+    print("Applying INT8 static quantization (v2 - manual config)...")
+    try:
+        model.eval()
+        model.cpu()
+        
+        # Use fbgemm for x86 CPUs
+        torch.backends.quantized.engine = 'fbgemm'
+        
+        # Get default qconfig
+        qconfig = torch.ao.quantization.get_default_qconfig('fbgemm')
+        
+        # Apply qconfig only to specific layers
+        def apply_qconfig(module):
+            for name, child in module.named_children():
+                if isinstance(child, nn.Linear):
+                    child.qconfig = qconfig
+                elif isinstance(child, (nn.Embedding, nn.LayerNorm)):
+                    child.qconfig = None  # Don't quantize these
+                else:
+                    apply_qconfig(child)  # Recurse
+        
+        apply_qconfig(model)
+        
+        # Prepare
+        print("Preparing model...")
+        prepared_model = torch.ao.quantization.prepare(model, inplace=False)
+        
+        # Calibrate with more data
+        print("Calibrating with 100 batches...")
+        with torch.no_grad():
+            for i, batch in enumerate(tqdm(calibration_dataloader, desc="Calibration")):
+                if i >= 100:  # Use 100 batches
+                    break
+                input_ids = batch['input_ids'].cpu()
+                attention_mask = batch['attention_mask'].cpu()
+                try:
+                    prepared_model(input_ids, attention_mask=attention_mask)
+                except Exception as e:
+                    print(f"Calibration warning on batch {i}: {e}")
+                    continue
+        
+        # Convert
+        print("Converting to quantized model...")
+        quantized_model = torch.ao.quantization.convert(prepared_model, inplace=False)
+        
+        # Verify quantization worked
+        print("Verifying quantization...")
+        test_batch = next(iter(calibration_dataloader))
+        with torch.no_grad():
+            output = quantized_model(
+                test_batch['input_ids'].cpu()[:1], 
+                attention_mask=test_batch['attention_mask'].cpu()[:1]
+            )
+            if torch.isnan(output.logits).any() or torch.isinf(output.logits).any():
+                raise ValueError("Quantized model produces NaN/Inf outputs")
+        
+        print("INT8 static quantization successful.")
+        return quantized_model
+            
     except Exception as e:
         print(f"Error during INT8 static quantization: {e}")
         raise

@@ -23,9 +23,18 @@ def load_and_prepare_dataset(dataset_name: str, subset: str, tokenizer: AutoToke
         dataset = load_dataset(dataset_name, subset, split=split)
 
         def tokenize_function(examples: Dict) -> Dict:
-            # Handle different key names for the text column in GLUE tasks
-            text_key = 'sentence' if 'sentence' in examples else 'question'
-            return tokenizer(examples[text_key], padding='max_length', truncation=True, max_length=128)
+            # Handle different key names for the text columns in GLUE tasks
+            if 'sentence1' in examples and 'sentence2' in examples:
+                # For sentence-pair tasks like MRPC, RTE
+                return tokenizer(examples['sentence1'], examples['sentence2'], padding='max_length', truncation=True, max_length=128)
+            elif 'question' in examples and 'sentence' in examples:
+                # For question-answering tasks like QNLI
+                return tokenizer(examples['question'], examples['sentence'], padding='max_length', truncation=True, max_length=128)
+            elif 'sentence' in examples:
+                # For single-sentence tasks like SST-2
+                return tokenizer(examples['sentence'], padding='max_length', truncation=True, max_length=128)
+            else:
+                raise ValueError(f"Could not find standard sentence/question columns in dataset features: {list(examples.keys())}")
 
         # Apply the tokenization across the entire dataset
         tokenized_dataset = dataset.map(tokenize_function, batched=True)
