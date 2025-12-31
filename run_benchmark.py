@@ -66,6 +66,26 @@ def main(args):
     except Exception as e:
         print("\n--- Static quantization failed for this model. Skipping. ---")
         print(f"    Underlying Error: {e}")
+    
+    # --- INT4 Dynamic Quantization (Weight-Only) ---
+    try:
+        print("\n--- Quantizing Model to INT4 (Dynamic, Weight-Only) ---")
+        model_int4, _ = model_loader.load_model_and_tokenizer(MODEL_NAME, TASK_NAME)
+
+        int4_dynamic_model = quantizer.quantize_int4_dynamic(model_int4)
+
+        print("\n--- Evaluating INT4 Dynamic Quantized Model ---")
+        int4_results = evaluator.run_evaluation_pipeline(
+            int4_dynamic_model, tokenizer, DATASET_INFO
+        )
+
+        all_results.append(int4_results)
+        index_labels.append('INT4-Dynamic')
+
+    except Exception as e:
+        print("\n--- INT4 quantization failed. Skipping. ---")
+        print(f"    Underlying Error: {e}")
+
 
     # --- Reporting with Multiple Runs ---
     print("\n--- Final Benchmark Results ---")
