@@ -1,0 +1,18 @@
+# Virtual environments
+venv/
+venv311/
+
+# OpenVINO models
+openvino_models/
+
+# Model artifacts
+*.bin
+*.xml
+*.pt
+*.pth
+*.onnx
+*.safetensors
+
+# Python cache
+__pycache__/
+.cache/
