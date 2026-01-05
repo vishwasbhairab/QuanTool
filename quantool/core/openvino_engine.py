@@ -68,6 +68,42 @@ def quantize_openvino_int8(fp32_model_dir: str, output_dir: str) -> None:
 
     print(f"OpenVINO INT8 model saved to: {output_dir}")
 
+# ============================================================
+# 2B. QUANTIZATION: OpenVINO FP32 → INT4 (Weight Compression)
+# ============================================================
+
+def compress_openvino_int4(fp32_model_dir: str, output_dir: str) -> None:
+    """
+    Apply INT4 weight-only compression using NNCF.
+
+    NOTE:
+    - Weights are compressed to INT4
+    - Execution remains FP32
+    - This reduces model size & memory footprint
+    """
+    print("Applying INT4 weight-only compression via NNCF...")
+    os.makedirs(output_dir, exist_ok=True)
+
+    core = Core()
+
+    model = core.read_model(
+        model=os.path.join(fp32_model_dir, "openvino_model.xml"),
+        weights=os.path.join(fp32_model_dir, "openvino_model.bin"),
+    )
+
+    compressed_model = nncf.compress_weights(
+        model,
+        mode=nncf.CompressWeightsMode.INT4,
+    )
+
+    serialize(
+        compressed_model,
+        os.path.join(output_dir, "openvino_model.xml"),
+        os.path.join(output_dir, "openvino_model.bin"),
+    )
+
+    print(f"OpenVINO INT4 (weight-compressed) model saved to: {output_dir}")
+
 
 # ============================================================
 # 3. INFERENCE ENGINE: OpenVINO Evaluator
