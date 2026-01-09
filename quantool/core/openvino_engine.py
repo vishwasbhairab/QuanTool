@@ -93,7 +93,7 @@ def compress_openvino_int4(fp32_model_dir: str, output_dir: str) -> None:
 
     compressed_model = nncf.compress_weights(
         model,
-        mode=nncf.CompressWeightsMode.INT4,
+        mode=nncf.CompressWeightsMode.INT4_SYM,
     )
 
     serialize(
