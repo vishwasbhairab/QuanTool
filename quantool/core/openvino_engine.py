@@ -9,7 +9,7 @@ from optimum.intel.openvino import OVModelForSequenceClassification
 # 1. EXPORT: Hugging Face → OpenVINO FP32
 # ============================================================
 
-def export_to_openvino(model_name: str, output_dir: str) -> None:
+def export_to_openvino(hf_model_id: str, output_dir: str) -> None:
     """
     Export a Hugging Face sequence classification model to OpenVINO FP32 IR.
 
@@ -21,7 +21,7 @@ def export_to_openvino(model_name: str, output_dir: str) -> None:
     os.makedirs(output_dir, exist_ok=True)
 
     model = OVModelForSequenceClassification.from_pretrained(
-        model_name,
+        hf_model_id,
         export=True,
         compile=False,
     )
@@ -109,36 +109,81 @@ def compress_openvino_int4(fp32_model_dir: str, output_dir: str) -> None:
 # 3. INFERENCE ENGINE: OpenVINO Evaluator
 # ============================================================
 
-class OpenVINOEvaluator:
-    """
-    OpenVINO inference wrapper for latency benchmarking.
-    """
+import os
 
-    def __init__(self, model_dir: str, device: str = "CPU"):
+class OpenVINOEvaluator:
+    def __init__(
+        self,
+        model_dir: str,
+        device: str = "CPU",
+        model_config=None,   # 🔑 pass HF model.config
+    ):
+        self.model_dir = model_dir
+        self.device = device
         self.core = Core()
 
+        # --------------------------------------------------
+        # Load OpenVINO model
+        # --------------------------------------------------
         self.model = self.core.read_model(
-            model=os.path.join(model_dir, "openvino_model.xml")
+            os.path.join(model_dir, "openvino_model.xml")
         )
 
         self.compiled_model = self.core.compile_model(
             self.model, device
         )
-
         self.infer_request = self.compiled_model.create_infer_request()
+
+        # --------------------------------------------------
+        # Capture expected input names from IR
+        # --------------------------------------------------
+        self.input_names = [
+            inp.get_any_name() for inp in self.model.inputs
+        ]
+
+        # Example: ['input_ids', 'attention_mask']
+        # DistilBERT does NOT have token_type_ids
+        print(f"[OpenVINO] Expected inputs: {self.input_names}")
+
+        # --------------------------------------------------
+        # Label mapping (for correctness & debugging)
+        # --------------------------------------------------
+        if model_config is not None:
+            self.id2label = model_config.id2label
+            self.label2id = model_config.label2id
+        else:
+            self.id2label = None
+            self.label2id = None
 
     def infer(self, inputs: dict):
         """
-        Run inference and measure latency.
-
-        Args:
-            inputs (dict): Tokenized inputs (input_ids, attention_mask)
-
-        Returns:
-            outputs: OpenVINO outputs
-            latency_ms (float): Inference latency in milliseconds
+        Run inference and return outputs + latency (ms)
         """
-        start = time.time()
-        outputs = self.infer_request.infer(inputs)
-        latency_ms = (time.time() - start) * 1000
+        # Filter inputs to what OpenVINO model expects
+        ov_inputs = {
+            k: v for k, v in inputs.items()
+            if k in self.input_names
+        }
+
+        start = time.perf_counter()
+        outputs = self.infer_request.infer(ov_inputs)
+        latency_ms = (time.perf_counter() - start) * 1000
+
         return outputs, latency_ms
+
+
+    def get_model_size_mb(self) -> float:
+        """
+        Returns total size of OpenVINO IR files (.xml + .bin) in MB.
+        """
+        xml_path = os.path.join(self.model_dir, "openvino_model.xml")
+        bin_path = os.path.join(self.model_dir, "openvino_model.bin")
+
+        total_bytes = 0
+        if os.path.exists(xml_path):
+            total_bytes += os.path.getsize(xml_path)
+        if os.path.exists(bin_path):
+            total_bytes += os.path.getsize(bin_path)
+
+        return total_bytes / (1024 * 1024)
+

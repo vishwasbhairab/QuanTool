@@ -1,178 +1,99 @@
-import torch
 import time
+import torch
+import psutil
 import os
-import tracemalloc
 import numpy as np
-from scipy import stats
-from torch.utils.data import DataLoader
+from typing import Dict, Any
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
-from typing import Dict, Any, Tuple
 
-def get_model_size(model: torch.nn.Module) -> float:
+
+class PyTorchEvaluator:
     """
-    Calculates the model's size in megabytes by saving its state dictionary to disk.
-    This is the most reliable way to measure the size of a quantized model.
+    Standardized PyTorch evaluator for QuanTool.
+    Measures accuracy, latency, memory, and model size.
     """
-    torch.save(model.state_dict(), "temp_model.p")
-    size_mb = os.path.getsize("temp_model.p") / (1024 * 1024)
-    os.remove("temp_model.p")
-    return size_mb
 
-def evaluate_accuracy(model: torch.nn.Module, data_loader: DataLoader, device: torch.device) -> float:
-    """
-    Evaluates the model's accuracy on a given dataset.
+    def __init__(self, model: torch.nn.Module):
+        self.model = model
+        self.model.eval()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
 
-    Args:
-        model (torch.nn.Module): The model to evaluate.
-        data_loader (DataLoader): DataLoader for the evaluation data.
-        device (torch.device): The device to run evaluation on (e.g., 'cpu', 'cuda').
+    # --------------------------------------------------
+    # Inference
+    # --------------------------------------------------
+    def infer(self, inputs: Dict[str, torch.Tensor]):
+        """
+        Run a single forward pass and measure latency.
+        """
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-    Returns:
-        float: The accuracy score.
-    """
-    model.eval()
-    model.to(device)
-    
-    all_preds = []
-    all_labels = []
+        with torch.no_grad():
+            start = time.perf_counter()
+            outputs = self.model(**inputs)
+            latency_ms = (time.perf_counter() - start) * 1000
 
-    with torch.no_grad():
-        for batch in tqdm(data_loader, desc="Evaluating Accuracy"):
-            input_ids = batch['input_ids'].to(device)
-            attention_mask = batch['attention_mask'].to(device)
-            labels = batch['label'].to(device)
+        return outputs, latency_ms
 
-            outputs = model(input_ids, attention_mask=attention_mask)
-            predictions = torch.argmax(outputs.logits, dim=-1)
-            
-            all_preds.extend(predictions.cpu().numpy())
+    # --------------------------------------------------
+    # Accuracy
+    # --------------------------------------------------
+    def evaluate_accuracy(self, dataloader) -> float:
+        all_preds, all_labels = [], []
+
+        for batch in tqdm(dataloader, desc="Evaluating accuracy"):
+            inputs = {
+                "input_ids": batch["input_ids"].to(self.device),
+                "attention_mask": batch["attention_mask"].to(self.device),
+            }
+            labels = batch["labels"].to(self.device)
+
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+                preds = outputs.logits.argmax(dim=-1)
+
+            all_preds.extend(preds.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
-    return accuracy_score(all_labels, all_preds)
+        return accuracy_score(all_labels, all_preds)
 
-def measure_performance(model: torch.nn.Module, data_loader: DataLoader, device: torch.device) -> Dict[str, Any]:
-    """
-    Measures latency, peak memory usage, and model size.
+    # --------------------------------------------------
+    # Latency (batched, per-sample)
+    # --------------------------------------------------
+    def benchmark_latency(self, dataloader, num_batches: int = 50) -> float:
+        latencies = []
 
-    Args:
-        model (torch.nn.Module): The model to profile.
-        data_loader (DataLoader): DataLoader to get a sample batch for profiling.
-        device (torch.device): The device to run profiling on.
+        for i, batch in enumerate(dataloader):
+            if i >= num_batches:
+                break
 
-    Returns:
-        Dict[str, Any]: A dictionary with performance metrics.
-    """
-    model.eval()
-    model.to(device)
+            inputs = {
+                "input_ids": batch["input_ids"].to(self.device),
+                "attention_mask": batch["attention_mask"].to(self.device),
+            }
 
-    # --- Latency Measurement ---
-    latencies = []
-    sample_batch = next(iter(data_loader))
-    input_ids = sample_batch['input_ids'].to(device)
-    attention_mask = sample_batch['attention_mask'].to(device)
-    
-    # Warm-up run to load model onto GPU, etc.
-    with torch.no_grad():
-        _ = model(input_ids, attention_mask=attention_mask)
+            batch_size = inputs["input_ids"].shape[0]
+            _, latency = self.infer(inputs)
+            latencies.append(latency / batch_size)
 
-    # Timed runs for stable measurement
-    num_runs = 50
-    for _ in tqdm(range(num_runs), desc="Measuring Latency"):
-        start_time = time.perf_counter()
-        with torch.no_grad():
-            _ = model(input_ids, attention_mask=attention_mask)
-        end_time = time.perf_counter()
-        latencies.append((end_time - start_time) * 1000) # Convert to milliseconds
+        return float(np.mean(latencies))
 
-    avg_latency_ms = np.mean(latencies)
-    latency_std_dev = np.std(latencies)
+    # --------------------------------------------------
+    # Model Size
+    # --------------------------------------------------
+    def get_model_size_mb(self) -> float:
+        param_size = sum(
+            p.nelement() * p.element_size() for p in self.model.parameters()
+        )
+        buffer_size = sum(
+            b.nelement() * b.element_size() for b in self.model.buffers()
+        )
+        return (param_size + buffer_size) / (1024 ** 2)
 
-    # --- Memory Measurement ---
-    tracemalloc.start()
-    with torch.no_grad():
-        _ = model(input_ids, attention_mask=attention_mask)
-    current, peak = tracemalloc.get_traced_memory()
-    tracemalloc.stop()
-    peak_memory_mb = peak / (1024 * 1024)
-
-    # --- Model Size ---
-    model_size_mb = get_model_size(model)
-
-    return {
-        "avg_latency_ms": avg_latency_ms,
-        "latency_std_dev": latency_std_dev,
-        "peak_memory_mb": peak_memory_mb,
-        "model_size_mb": model_size_mb,
-    }
-
-def run_evaluation_pipeline(model: torch.nn.Module, tokenizer, dataset_info: Dict) -> Dict[str, Any]:
-    """
-    Runs the full evaluation pipeline: accuracy and performance metrics.
-    
-    Args:
-        model (torch.nn.Module): The model to evaluate.
-        tokenizer: The model's tokenizer.
-        dataset_info (Dict): Dictionary with dataset name and subset.
-        
-    Returns:
-        Dict[str, Any]: A dictionary containing all evaluation results.
-    """
-    # Dynamically select device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Running evaluation on device: {device}")
-
-    # Lazily import to avoid circular dependency if this file grows
-    from quantool.benchmarks.datasets import load_and_prepare_dataset
-    
-    data_loader = load_and_prepare_dataset(
-        dataset_name=dataset_info['name'],
-        subset=dataset_info['subset'],
-        tokenizer=tokenizer
-    )
-
-    accuracy = evaluate_accuracy(model, data_loader, device)
-    performance_metrics = measure_performance(model, data_loader, device)
-
-    return {
-        "accuracy": accuracy,
-        **performance_metrics
-    }
-
-
-def run_multiple_evaluations(model: torch.nn.Module, tokenizer, dataset_info: Dict, n_runs: int = 3) -> Dict[str, Any]:
-    """
-    Run evaluation multiple times to get confidence intervals.
-
-    Args:
-        model: Model to evaluate
-        tokenizer: Tokenizer
-        dataset_info: Dataset configuration
-        n_runs: Number of evaluation runs
-
-    Returns:
-        Dictionary with mean, std, and confidence intervals
-    """
-    results = []
-
-    for run in range(n_runs):
-        print(f"\n--- Run {run + 1}/{n_runs} ---")
-        result = run_evaluation_pipeline(model, tokenizer, dataset_info)
-        results.append(result)
-
-    # Compute statistics
-    accuracies = [r['accuracy'] for r in results]
-    latencies = [r['avg_latency_ms'] for r in results]
-
-    return {
-        'accuracy_mean': np.mean(accuracies),
-        'accuracy_std': np.std(accuracies),
-        'accuracy_ci_95': stats.t.interval(0.95, len(accuracies)-1,
-                                            loc=np.mean(accuracies),
-                                            scale=stats.sem(accuracies)),
-        'latency_mean': np.mean(latencies),
-        'latency_std': np.std(latencies),
-        'avg_latency_ms': np.mean(latencies),  # for compatibility
-        'model_size_mb': results[0]['model_size_mb'],  # consistent across runs
-        'peak_memory_mb': results[0]['peak_memory_mb']
-    }
+    # --------------------------------------------------
+    # Peak Memory
+    # --------------------------------------------------
+    def get_peak_memory_mb(self) -> float:
+        process = psutil.Process(os.getpid())
+        return process.memory_info().rss / (1024 ** 2)
