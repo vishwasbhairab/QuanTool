@@ -2,7 +2,7 @@ import argparse
 import os
 import numpy as np
 import pandas as pd
-
+import torch
 from quantool.models import model_loader
 from quantool.core import quantizer, evaluator
 from quantool.benchmarks.datasets import load_and_prepare_dataset
@@ -117,16 +117,36 @@ def main(args):
     else:
         raise ValueError("Unsupported backend")
 
-    # --------------------------------------------------
-    # 4. Warm-up
-    # --------------------------------------------------
+# --------------------------------------------------
+# Warm-up (important for fair latency)
+# --------------------------------------------------
     print("\n--- Warm-up ---")
+
     warmup_batch = next(iter(eval_loader))
-    warmup_inputs = {
-        "input_ids": warmup_batch["input_ids"],
-        "attention_mask": warmup_batch["attention_mask"],
-    }
-    evaluator_instance.infer(warmup_inputs)
+
+        # PyTorch warm-up
+    if args.backend == "pytorch":
+        warmup_inputs = {
+            "input_ids": warmup_batch["input_ids"],
+            "attention_mask": warmup_batch["attention_mask"],
+        }
+
+        # OpenVINO warm-up
+    elif args.backend == "openvino":
+        warmup_inputs = {
+            "input_ids": warmup_batch["input_ids"].cpu().numpy(),
+            "attention_mask": warmup_batch["attention_mask"].cpu().numpy(),
+        }
+
+        if "token_type_ids" in evaluator_instance.input_names:
+            warmup_inputs["token_type_ids"] = np.zeros_like(
+                warmup_inputs["input_ids"]
+            )
+
+        # Run warm-up iterations
+    for _ in range(5):
+        evaluator_instance.infer(warmup_inputs)
+
 
     # --------------------------------------------------
     # 5. Evaluation
@@ -138,42 +158,62 @@ def main(args):
     total = 0
 
     for batch in eval_loader:
+
+        # PyTorch backend
         if args.backend == "pytorch":
             inputs = {
                 "input_ids": batch["input_ids"],
                 "attention_mask": batch["attention_mask"],
             }
-        else:
+
+
+        # OpenVINO backend
+        elif args.backend == "openvino":
             inputs = {
                 "input_ids": batch["input_ids"].cpu().numpy(),
                 "attention_mask": batch["attention_mask"].cpu().numpy(),
             }
 
+            # Add token_type_ids only if model expects it
+            if "token_type_ids" in evaluator_instance.input_names:
+                inputs["token_type_ids"] = np.zeros_like(inputs["input_ids"])
+
+
+
         outputs, latency = evaluator_instance.infer(inputs)
         latencies.append(latency / inputs["input_ids"].shape[0])
-
-        # Extract logits
         logits = list(outputs.values())[0]
 
-        # Convert to numpy
-        if hasattr(logits, "cpu"):
-            logits = logits.cpu().numpy()
-
+        # Extract logits
         raw_preds = logits.argmax(axis=-1)
         raw_preds = np.atleast_1d(raw_preds)
 
-        # 🔑 FIX: align prediction IDs with dataset labels
-        if evaluator_instance.label2id is not None:
-            # Dataset expects POSITIVE=1, NEGATIVE=0
-            if evaluator_instance.label2id.get("POSITIVE", 1) == 0:
-                preds = 1 - raw_preds
-            else:
-                preds = raw_preds
-        else:
-            preds = raw_preds
-        
+        # --------------------------------------------------
+        # Universal GLUE label alignment (SST2, QNLI, RTE, MRPC)
+        # --------------------------------------------------
+        preds = raw_preds
 
+        if hasattr(evaluator_instance, "label2id") and evaluator_instance.label2id is not None:
+            label2id = evaluator_instance.label2id
 
+            # Case 1: SST-2 → POSITIVE label mapping
+            if "POSITIVE" in label2id:
+                if label2id["POSITIVE"] == 0:
+                    preds = 1 - raw_preds
+
+            # Case 2: QNLI / RTE → entailment mapping
+            elif "entailment" in label2id:
+                # GLUE expects entailment = 1
+                if label2id["entailment"] == 0:
+                    preds = 1 - raw_preds
+
+            # Case 3: MRPC → equivalent mapping
+            elif "equivalent" in label2id:
+                # GLUE expects equivalent = 1
+                if label2id["equivalent"] == 0:
+                    preds = 1 - raw_preds
+
+        # otherwise default ordering is correct
 
         labels = batch.get("labels", batch.get("label"))
 
@@ -184,8 +224,6 @@ def main(args):
 
         correct += int((preds == labels).sum())
         total += labels.shape[0]
-    print("id2label:", evaluator_instance.id2label)
-    print("label2id:", evaluator_instance.label2id)
 
 
     accuracy = correct / total

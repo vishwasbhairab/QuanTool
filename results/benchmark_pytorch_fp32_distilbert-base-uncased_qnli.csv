@@ -1,2 +1,2 @@
 model,task,backend,precision,accuracy,avg_latency_ms,model_size_mb
-distilbert-base-uncased,sst2,openvino,fp32,0.9106,51.87,255.63
+distilbert-base-uncased,qnli,pytorch,fp32,0.8849,88.25,255.42
