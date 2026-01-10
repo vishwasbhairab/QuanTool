@@ -76,9 +76,9 @@ def main(args):
         )
 
         base = MODEL_NAME.replace("/", "_")
-        fp32_dir = f"./openvino_models/{base}_fp32"
-        int8_dir = f"./openvino_models/{base}_int8"
-        int4_dir = f"./openvino_models/{base}_int4"
+        fp32_dir = f"./openvino_models/{base}_{TASK_NAME}_fp32"
+        int8_dir = f"./openvino_models/{base}_{TASK_NAME}_int8"
+        int4_dir = f"./openvino_models/{base}_{TASK_NAME}_int4"
 
         # 🔑 ALWAYS load HF fine-tuned model ONCE
         hf_model, _ = model_loader.load_model_and_tokenizer(

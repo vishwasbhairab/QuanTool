@@ -1,2 +1,2 @@
 model,task,backend,precision,accuracy,avg_latency_ms,model_size_mb
-distilbert-base-uncased,sst2,openvino,int8,0.9117,30.86,64.62
+distilbert-base-uncased,sst2,openvino,int8,0.9117,42.52,64.62

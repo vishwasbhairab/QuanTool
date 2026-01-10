@@ -1,2 +1,2 @@
 model,task,backend,precision,accuracy,avg_latency_ms,model_size_mb
-bert-base-uncased,sst2,openvino,int8,0.922,85.09,105.76
+bert-base-uncased,sst2,openvino,int8,0.922,94.41,105.76

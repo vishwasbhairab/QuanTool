@@ -1,2 +1,2 @@
 model,task,backend,precision,accuracy,avg_latency_ms,model_size_mb
-distilbert-base-uncased,sst2,pytorch,int8,0.9014,36.36,91.0
+distilbert-base-uncased,sst2,pytorch,int8,0.9014,66.85,91.0

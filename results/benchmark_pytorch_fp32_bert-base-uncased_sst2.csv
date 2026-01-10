@@ -1,2 +1,2 @@
 model,task,backend,precision,accuracy,avg_latency_ms,model_size_mb
-bert-base-uncased,sst2,pytorch,fp32,0.9243,224.26,417.66
+bert-base-uncased,sst2,pytorch,fp32,0.9243,308.11,417.66

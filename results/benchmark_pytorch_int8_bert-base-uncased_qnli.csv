@@ -1,2 +1,2 @@
 model,task,backend,precision,accuracy,avg_latency_ms,model_size_mb
-bert-base-uncased,sst2,openvino,fp32,0.9243,128.16,418.01
+bert-base-uncased,qnli,pytorch,int8,0.5167,107.52,91.08
