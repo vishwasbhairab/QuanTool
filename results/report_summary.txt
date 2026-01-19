@@ -1,0 +1,325 @@
+QUANTOOL – AUTOMATED BENCHMARK REPORT SUMMARY
+
+============================================================
+
+Overall Benchmark Results:
+
+                  model task  backend precision  accuracy  avg_latency_ms  model_size_mb  accuracy_drop_%  latency_speedup_x  size_reduction_x
+      bert-base-uncased qnli openvino      fp32    0.5892          131.59         418.01             0.00              1.000             1.000
+      bert-base-uncased qnli openvino      int4    0.5933           79.61          67.30             0.41              1.653             6.211
+      bert-base-uncased qnli openvino      int8    0.5923           86.08         105.76             0.31              1.529             3.952
+      bert-base-uncased qnli  pytorch      fp32    0.5892          242.36         417.66             0.00              1.000             1.000
+      bert-base-uncased qnli  pytorch      int8    0.5167          107.52          91.08            -7.25              2.254             4.586
+      bert-base-uncased sst2 openvino      fp32    0.9243          128.16         418.01             0.00              1.000             1.000
+      bert-base-uncased sst2 openvino      int4    0.9232           92.86          67.30            -0.11              1.380             6.211
+      bert-base-uncased sst2 openvino      int8    0.9220           94.41         105.76            -0.23              1.357             3.952
+      bert-base-uncased sst2  pytorch      fp32    0.9243          308.11         417.66             0.00              1.000             1.000
+      bert-base-uncased sst2  pytorch      int8    0.9128          137.58          91.08            -1.15              2.239             4.586
+distilbert-base-uncased qnli openvino      fp32    0.8849           66.95         255.63             0.00              1.000             1.000
+distilbert-base-uncased qnli openvino      int4    0.8739           44.41          45.28            -1.10              1.508             5.646
+distilbert-base-uncased qnli openvino      int8    0.8841           49.10          64.62            -0.08              1.364             3.956
+distilbert-base-uncased qnli  pytorch      fp32    0.8849          124.25         255.42             0.00              1.000             1.000
+distilbert-base-uncased qnli  pytorch      int8    0.8596           60.99          91.00            -2.53              2.037             2.807
+distilbert-base-uncased sst2 openvino      fp32    0.9106           51.10         255.63             0.00              1.000             1.000
+distilbert-base-uncased sst2 openvino      int4    0.9083           41.25          45.28            -0.23              1.239             5.646
+distilbert-base-uncased sst2 openvino      int8    0.9117           42.52          64.62             0.11              1.202             3.956
+distilbert-base-uncased sst2  pytorch      fp32    0.9106          123.41         255.42             0.00              1.000             1.000
+distilbert-base-uncased sst2  pytorch      int8    0.9014           66.85          91.00            -0.92              1.846             2.807
+
+
+
+
+Model: bert-base-uncased
+
+Task: QNLI
+
+Backend: OPENVINO
+
+--------------------------------------------------
+
+FP32 Baseline Accuracy: 0.5892
+
+FP32 Latency: 131.59 ms
+
+FP32 Model Size: 418.01 MB
+
+
+Best Quantized Precision: INT4
+
+Accuracy: 0.5933
+
+Latency: 79.61 ms
+
+Model Size: 67.30 MB
+
+Accuracy Drop: -0.0041
+
+Latency Speedup: 1.65×
+
+Size Reduction: 6.21×
+
+
+Interpretation:
+
+For bert-base-uncased on QNLI using OPENVINO, INT4 quantization achieves 1.65× faster inference and 6.21× smaller model size, with only -0.0041 accuracy degradation.
+
+
+
+
+Model: bert-base-uncased
+
+Task: QNLI
+
+Backend: PYTORCH
+
+--------------------------------------------------
+
+FP32 Baseline Accuracy: 0.5892
+
+FP32 Latency: 242.36 ms
+
+FP32 Model Size: 417.66 MB
+
+
+Best Quantized Precision: INT8
+
+Accuracy: 0.5167
+
+Latency: 107.52 ms
+
+Model Size: 91.08 MB
+
+Accuracy Drop: 0.0725
+
+Latency Speedup: 2.25×
+
+Size Reduction: 4.59×
+
+
+Interpretation:
+
+For bert-base-uncased on QNLI using PYTORCH, INT8 quantization achieves 2.25× faster inference and 4.59× smaller model size, with only 0.0725 accuracy degradation.
+
+
+
+
+Model: bert-base-uncased
+
+Task: SST2
+
+Backend: OPENVINO
+
+--------------------------------------------------
+
+FP32 Baseline Accuracy: 0.9243
+
+FP32 Latency: 128.16 ms
+
+FP32 Model Size: 418.01 MB
+
+
+Best Quantized Precision: INT4
+
+Accuracy: 0.9232
+
+Latency: 92.86 ms
+
+Model Size: 67.30 MB
+
+Accuracy Drop: 0.0011
+
+Latency Speedup: 1.38×
+
+Size Reduction: 6.21×
+
+
+Interpretation:
+
+For bert-base-uncased on SST2 using OPENVINO, INT4 quantization achieves 1.38× faster inference and 6.21× smaller model size, with only 0.0011 accuracy degradation.
+
+
+
+
+Model: bert-base-uncased
+
+Task: SST2
+
+Backend: PYTORCH
+
+--------------------------------------------------
+
+FP32 Baseline Accuracy: 0.9243
+
+FP32 Latency: 308.11 ms
+
+FP32 Model Size: 417.66 MB
+
+
+Best Quantized Precision: INT8
+
+Accuracy: 0.9128
+
+Latency: 137.58 ms
+
+Model Size: 91.08 MB
+
+Accuracy Drop: 0.0115
+
+Latency Speedup: 2.24×
+
+Size Reduction: 4.59×
+
+
+Interpretation:
+
+For bert-base-uncased on SST2 using PYTORCH, INT8 quantization achieves 2.24× faster inference and 4.59× smaller model size, with only 0.0115 accuracy degradation.
+
+
+
+
+Model: distilbert-base-uncased
+
+Task: QNLI
+
+Backend: OPENVINO
+
+--------------------------------------------------
+
+FP32 Baseline Accuracy: 0.8849
+
+FP32 Latency: 66.95 ms
+
+FP32 Model Size: 255.63 MB
+
+
+Best Quantized Precision: INT8
+
+Accuracy: 0.8841
+
+Latency: 49.10 ms
+
+Model Size: 64.62 MB
+
+Accuracy Drop: 0.0008
+
+Latency Speedup: 1.36×
+
+Size Reduction: 3.96×
+
+
+Interpretation:
+
+For distilbert-base-uncased on QNLI using OPENVINO, INT8 quantization achieves 1.36× faster inference and 3.96× smaller model size, with only 0.0008 accuracy degradation.
+
+
+
+
+Model: distilbert-base-uncased
+
+Task: QNLI
+
+Backend: PYTORCH
+
+--------------------------------------------------
+
+FP32 Baseline Accuracy: 0.8849
+
+FP32 Latency: 124.25 ms
+
+FP32 Model Size: 255.42 MB
+
+
+Best Quantized Precision: INT8
+
+Accuracy: 0.8596
+
+Latency: 60.99 ms
+
+Model Size: 91.00 MB
+
+Accuracy Drop: 0.0253
+
+Latency Speedup: 2.04×
+
+Size Reduction: 2.81×
+
+
+Interpretation:
+
+For distilbert-base-uncased on QNLI using PYTORCH, INT8 quantization achieves 2.04× faster inference and 2.81× smaller model size, with only 0.0253 accuracy degradation.
+
+
+
+
+Model: distilbert-base-uncased
+
+Task: SST2
+
+Backend: OPENVINO
+
+--------------------------------------------------
+
+FP32 Baseline Accuracy: 0.9106
+
+FP32 Latency: 51.10 ms
+
+FP32 Model Size: 255.63 MB
+
+
+Best Quantized Precision: INT8
+
+Accuracy: 0.9117
+
+Latency: 42.52 ms
+
+Model Size: 64.62 MB
+
+Accuracy Drop: -0.0011
+
+Latency Speedup: 1.20×
+
+Size Reduction: 3.96×
+
+
+Interpretation:
+
+For distilbert-base-uncased on SST2 using OPENVINO, INT8 quantization achieves 1.20× faster inference and 3.96× smaller model size, with only -0.0011 accuracy degradation.
+
+
+
+
+Model: distilbert-base-uncased
+
+Task: SST2
+
+Backend: PYTORCH
+
+--------------------------------------------------
+
+FP32 Baseline Accuracy: 0.9106
+
+FP32 Latency: 123.41 ms
+
+FP32 Model Size: 255.42 MB
+
+
+Best Quantized Precision: INT8
+
+Accuracy: 0.9014
+
+Latency: 66.85 ms
+
+Model Size: 91.00 MB
+
+Accuracy Drop: 0.0092
+
+Latency Speedup: 1.85×
+
+Size Reduction: 2.81×
+
+
+Interpretation:
+
+For distilbert-base-uncased on SST2 using PYTORCH, INT8 quantization achieves 1.85× faster inference and 2.81× smaller model size, with only 0.0092 accuracy degradation.
+
+
