@@ -34,8 +34,8 @@ The framework currently supports the following configurations for benchmarking:
 Clone the repository and install the required dependencies:
 
 ```bash
-git clone https://github.com/<your-username>/quantool.git
-cd quantool
+git clone https://github.com/vishwasbhairab/QuanTool.git
+cd QuanTool
 pip install -r requirements.txt
 ```
 
@@ -48,7 +48,7 @@ pip install -r requirements.txt
 To evaluate a model across specific parameters:
 
 ```bash
-python main.py --model "distilbert-base-uncased" --task "sst2" --backends "pytorch" "openvino"
+python main.py --model "distilbert-base-uncased" --task "sst2" --backends "pytorch" --precision int8
 ```
 
 ### 2. Run Full Benchmark Suite (One Command)
@@ -59,7 +59,12 @@ To execute the complete testing matrix (FP32, INT8, and INT4) across all support
 python scripts/run_all_benchmarks.py
 ```
 
-Results are automatically consolidated in `results/master_results.csv`.
+Results are stored in seperate csv files wrt model, task, backend and precision.
+
+To aggregate results into one csv file:
+```bash
+python tools/aggregate_results.py
+```
 
 ### 3. Generate Visual Analytics
 
@@ -67,6 +72,8 @@ To visualize the performance trade-offs:
 
 ```bash
 python scripts/plot_benchmarks.py
+                 OR
+python tools/plot_overall_dashboard.py
 ```
 
 This will generate Latency vs. Accuracy and Size Comparison charts in the `/plots` directory as PNG and PDF files.
@@ -105,8 +112,3 @@ This will generate Latency vs. Accuracy and Size Comparison charts in the `/plot
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-
-## 👤 Author
-
-**Vishwas Kumar Pandey**  
-B.Tech (Computer Science Engineering), Final Year
