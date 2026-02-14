@@ -1,86 +1,114 @@
-# 🚀 QuanTool Core: A Post-Training Quantization Toolkit
+# QuanTool 🚀
 
-## 📌 1. Project Description
-QuanTool is a **Python-based benchmarking framework** for evaluating the performance impact of **post-training quantization** on Hugging Face Transformer models.
+**A Framework for Benchmarking Post-Training Quantization Techniques for Transformer Models**
 
-It provides a clean, automated pipeline to compare a model's **original full-precision (Float32)** version against its **8-bit integer (INT8)** counterparts.
-
-The goal is to deliver **data-driven insights** into the trade-offs between:
-
-- ✅ Model accuracy  
-- ⚡ Inference speed (latency)  
-- 💾 Memory usage  
-- 📦 Model size  
-
-This enables developers to make **informed deployment decisions** for optimized models.
+QuanTool is a specialized benchmarking framework developed to evaluate the efficiency and impact of Post-Training Quantization (PTQ) on Transformer models. By focusing on reproducible best practices, it provides a clear picture of the trade-offs between model size, inference speed, and accuracy.
 
 ---
 
-## ⚙️ 2. Installation
-Ensure you have **Python 3.8+** and `pip` installed.
+## 📌 Motivation
 
-1. Clone the repository or download the source files.  
-2. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+Quantization can significantly reduce model size and inference latency, but improper evaluation (e.g., using non-fine-tuned models) leads to misleading results.
+
+QuanTool provides:
+- **Verified fine-tuned model loading**: Ensuring evaluation is done on high-quality weights.
+- **Backend-aware benchmarking**: Comparative analysis between PyTorch and OpenVINO.
+- **Automated experiment execution**: Streamlined testing across multiple precisions (FP32, INT8, INT4).
+- **Clean Analysis**: Direct accuracy–latency–compression reporting for optimized deployment.
 
 ---
 
-## ▶️ 3. Running the Benchmark
-The main entry point is **`run_benchmark.py`**.  
-You can specify the model and **GLUE task** using command-line arguments.
+## 🧠 Supported Models & Tasks
 
-### Example Commands:
+The framework currently supports the following configurations for benchmarking:
+
+| Model | Task | Dataset/Metric |
+|-------|------|----------------|
+| `distilbert-base-uncased` | SST-2 | Sentiment Analysis (Accuracy) |
+| `bert-base-uncased` | QNLI | Question Answering (Accuracy) |
+
+---
+
+## ⚙️ Installation
+
+Clone the repository and install the required dependencies:
+
 ```bash
-# Run on DistilBERT with the default task (sst2)
-python run_benchmark.py --model-name "distilbert-base-uncased"
-
-# Run on BERT with the default task (sst2)
-python run_benchmark.py --model-name "bert-base-uncased"
-
-# Run on DistilBERT with a different task (qnli)
-python run_benchmark.py --model-name "distilbert-base-uncased" --task "qnli"
+git clone https://github.com/vishwasbhairab/QuanTool.git
+cd QuanTool
+pip install -r requirements.txt
 ```
 
 ---
 
-## 🔄 4. What Happens When You Run It?
-The script will:
+## 🚀 Usage
 
-1. 📥 Download the specified model and **GLUE task dataset** (e.g., `sst2`, `qnli`).  
-2. 🧪 Benchmark the **original FP32 model**.  
-3. ⚡ Apply and benchmark **INT8 Dynamic Quantization**.  
-4. 🛠️ Attempt **INT8 Static Quantization** (and gracefully handle failures).  
-5. 📊 Print a **summary table** in the console.  
-6. 💾 Save results to:  
-   - `.csv` file  
-   - `.png` summary plot  
+### 1. Run a Specific Benchmark
+
+To evaluate a model across specific parameters:
+
+```bash
+python main.py --model "distilbert-base-uncased" --task "sst2" --backends "pytorch" --precision int8
+```
+
+### 2. Run Full Benchmark Suite (One Command)
+
+To execute the complete testing matrix (FP32, INT8, and INT4) across all supported backends:
+
+```bash
+python scripts/run_all_benchmarks.py
+```
+
+Results are stored in seperate csv files wrt model, task, backend and precision.
+
+To aggregate results into one csv file:
+```bash
+python tools/aggregate_results.py
+```
+
+### 3. Generate Visual Analytics
+
+To visualize the performance trade-offs:
+
+```bash
+python scripts/plot_benchmarks.py
+                 OR
+python tools/plot_overall_dashboard.py
+```
+
+This will generate Latency vs. Accuracy and Size Comparison charts in the `/plots` directory as PNG and PDF files.
 
 ---
 
-## 📈 5. Example Output
-After a successful run, you will see a table like this in your terminal.  
-This example is for `distilbert-base-uncased` on the **sst2** task.  
+## 📈 Metrics Reported
 
-*(Note: Numbers may vary depending on your hardware.)*
+- **Accuracy**: Maintains task-specific performance scores (F1/Accuracy).
+- **Average Latency (ms)**: Measured per inference pass.
+- **Model Size (MB)**: Total disk footprint after quantization.
+- **Speedup (×)**: Latency gain relative to the FP32 baseline.
+- **Size Reduction (×)**: Storage gain relative to the FP32 baseline.
 
-| Model        | Accuracy | Accuracy Drop | Avg Latency (ms) | Latency Speedup (x) |
-|--------------|----------|---------------|------------------|----------------------|
-| Float32      | 0.8933   | 0.0000        | 2753.45          | 1.00                 |
-| INT8-Dynamic | 0.8853   | 0.0080        | 1305.12          | 2.11                 |
-
-> ✅ Dynamic quantization achieves a **2.1x latency speedup** and **3.8x model size reduction** with only a **0.8% accuracy drop**.  
-> ⚠️ Static quantization is expected to fail for some Transformer models, which the tool handles automatically.  
 ---
 
-## Collaborators
+## 🧪 Experimental Best Practices
 
-<table>
-  <tr>
-    <td align="center"><a href="https://github.com/Naina2308"><img src="https://avatars.githubusercontent.com/Naina2308" width="100px;" alt=""/><br /><sub><b>Naina Jain</b></sub></a></td>
-    <td align="center"><a href="https://github.com/Vvidhuu"><img src="https://avatars.githubusercontent.com/Vvidhuu" width="100px;" alt=""/><br /><sub><b>Vidhi Soni</b></sub></a></td>
-    <td align="center"><a href="https://github.com/vishwasbhairab"><img src="https://avatars.githubusercontent.com/vishwasbhairab" width="100px;" alt=""/><br /><sub><b>Vishwas Kumar Pandey</b></sub></a></td>
-  </tr>
-</table>
+- **Verified Models**: Only uses fine-tuned models to ensure valid accuracy metrics.
+- **Baseline Validation**: Every test is compared against a verified FP32 baseline.
+- **Warm-up Runs**: Performs inference "warm-ups" before recording timing to avoid cold-start bias.
+- **Backend Handling**: Specialized input handling for both PyTorch and OpenVINO engines.
 
+---
+
+## 🧩 Known Limitations
+
+- Static INT8 quantization for Transformers can be unstable depending on the calibration set.
+- Current support is optimized for CPU-based inference.
+- **INT4 Precision**: Utilizes weight-only compression techniques.
+
+---
+
+## 🛡️ License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
