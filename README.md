@@ -48,7 +48,7 @@ pip install -r requirements.txt
 To evaluate a model across specific parameters:
 
 ```bash
-python main.py --model "distilbert-base-uncased" --task "sst2" --backends "pytorch" --precision int8
+python main.py --model "distilbert-base-uncased" --task "sst2" --backends "pytorch" --precision "int8"
 ```
 
 ### 2. Run Full Benchmark Suite (One Command)
@@ -56,27 +56,38 @@ python main.py --model "distilbert-base-uncased" --task "sst2" --backends "pytor
 To execute the complete testing matrix (FP32, INT8, and INT4) across all supported backends:
 
 ```bash
-python scripts/run_all_benchmarks.py
+python run_all_benchmarks.py
 ```
 
-Results are stored in seperate csv files wrt model, task, backend and precision.
-
-To aggregate results into one csv file:
-```bash
-python tools/aggregate_results.py
-```
+Results are automatically consolidated in `results/master_results.csv`.
 
 ### 3. Generate Visual Analytics
 
 To visualize the performance trade-offs:
 
 ```bash
-python scripts/plot_benchmarks.py
-                 OR
-python tools/plot_overall_dashboard.py
+python plot_benchmarks.py
 ```
 
 This will generate Latency vs. Accuracy and Size Comparison charts in the `/plots` directory as PNG and PDF files.
+
+### 4. Interactive Streamlit Dashboard
+
+Explore results interactively through our web-based dashboard:
+
+```bash
+streamlit run dashboard.py
+```
+
+**Live Demo**: [Streamlit Dashboard](https://quantool.streamlit.app/)
+
+Features:
+- **Model Selection**: Choose from available models via dropdown
+- **Task Selection**: Filter by specific tasks
+- **Backend Comparison**: Compare PyTorch and OpenVINO performance
+- **Interactive Tables**: View detailed benchmark results
+- **Visualization**: Dynamic plots for latency vs. accuracy trade-offs
+- **Export Functionality**: Download filtered results as CSV
 
 ---
 
@@ -109,6 +120,47 @@ This will generate Latency vs. Accuracy and Size Comparison charts in the `/plot
 
 ## 🛡️ License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
+
+## 👤 Author
+
+**Vishwas Kumar Pandey**  
+B.Tech (Computer Science Engineering), Final Year
+
+---
+
+## 🤝 Contributors
+
+We welcome contributions from the community! If you'd like to contribute to QuanTool, please follow these steps:
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/AmazingFeature`)
+3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`)
+4. **Push to the branch** (`git push origin feature/AmazingFeature`)
+5. **Open a Pull Request**
+
+### Current Contributors
+
+<!-- Add contributors here -->
+- **[Vishwas Kumar Pandey]** - [vishwasbhairab](https://github.com/vishwasbhairab)
+- **[Naina Jain]** - [Naina2308](https://github.com/Naina2308)
+- **[Vidhi Soni]** - [Vvidhuu](https://github.com/Vvidhuu)
+
+### How to Contribute
+
+Contributions are welcome in the following areas:
+- Adding support for new models (e.g., RoBERTa, ALBERT, T5)
+- Implementing additional quantization techniques
+- Extending backend support (TensorRT, ONNX Runtime)
+- Improving documentation and examples
+- Bug fixes and performance optimizations
+- Adding new benchmarking tasks and datasets
+
+### Acknowledgments
+
+Special thanks to:
+- The Hugging Face team for their transformers library
+- OpenVINO team for optimization tools
+- The open-source community for continuous support
